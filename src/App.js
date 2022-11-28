@@ -1,25 +1,51 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import "./App.css";
+import About from "./components/About";
+import ResponsiveAppBar from "./components/Navbar/ResponsiveAppBar";
+import PeopleTableOne from "./components/PeopleTableOne";
+
+// import Dexie from "dexie";
+// import { useLiveQuery } from "dexie-react-hooks";
+
+// const db = new Dexie("MarketList");
+// db.version(1).stores({
+//   items: "++id,name,firstname,lastname,email,primaryorganization,status",
+// });
 
 function App() {
+  // const allItems = useLiveQuery(() => db.items.toArray(), []);
+  // if (!allItems) return null;
+
+  // const addItemToDb = async (event) => {
+  //   // event.preventDefault();
+  //   const name =
+  //     document.querySelector("#first-name").value +
+  //     " " +
+  //     document.querySelector("#last-name").value;
+  //   const firstName = document.querySelector("#first-name").value;
+  //   const lastName = document.querySelector("#last-name").value;
+  //   console.log(name + " " + lastName);
+  //   await db.items.add({
+  //     name: name,
+  //     firstname: firstName,
+  //     lastname: lastName,
+  //     email: "",
+  //     primaryorganization: "",
+  //     status: "",
+  //   });
+  // };
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <ResponsiveAppBar />
+      <div style={{ margin: "10px" }}>
+        <Routes>
+          <Route exact path="/" element={<PeopleTableOne />}></Route>
+          <Route exact path="/about" element={<About />}></Route>
+          {/* <Route path="/detail/:id" element={<PeopleDetails />}></Route> */}
+        </Routes>
+      </div>
+    </>
   );
 }
 
