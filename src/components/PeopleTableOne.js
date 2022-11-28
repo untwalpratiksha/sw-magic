@@ -38,6 +38,7 @@ const PeopleTableOne = () => {
   return (
     <>
       {mode === "offline" ? <div>You are in offline mode</div> : null}
+      <div>People</div>
       <div className="ag-theme-alpine" style={{ height: 400, width: "100%" }}>
         <AgGridReact
           rowData={peoples}
