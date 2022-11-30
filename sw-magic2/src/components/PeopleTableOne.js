@@ -12,8 +12,8 @@ const PeopleTableOne = ({ db, allItems }) => {
     axios
       .get("https://jsonplaceholder.typicode.com/users")
       .then((response) => {
-        db.items.clear();
         setPeoples(response.data);
+        storeToIndexedDB(response.data);
         // localStorage.setItem("peoples", JSON.stringify(response.data));
       })
       .catch((error) => {
@@ -26,24 +26,7 @@ const PeopleTableOne = ({ db, allItems }) => {
   useEffect(() => {
     fetchData();
   }, []);
-  useEffect(() => {
-    storeToIndexedDB(peoples);
-  }, [peoples]);
-  useEffect(() => {
-    window.addEventListener("online", () => {
-      console.log("Became online");
-      fetchData();
-      setMode("online");
-    });
-    window.addEventListener("offline", () => {
-      console.log("Became offline");
-      setMode("offline");
-    });
-    return () => {
-      window.removeEventListener("online");
-      window.removeEventListener("offline");
-    };
-  }, []);
+
   const storeToIndexedDB = async (payload) => {
     console.log(payload);
     payload.map(async (item) => {

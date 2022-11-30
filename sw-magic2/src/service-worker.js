@@ -99,7 +99,6 @@ self.addEventListener("activate", (event) => {
       if ("navigationPreload" in self.registration) {
         await self.registration.navigationPreload.enable();
       }
-      return;
     })()
   );
 
@@ -113,33 +112,16 @@ self.addEventListener("fetch", (event) => {
   console.log("fetching data from cache");
   if (!navigator.onLine) {
     event.respondWith(
-      (async function () {
-        // Respond from the cache if we can
-        const cachedResponse = await caches.match(event.request);
-        if (cachedResponse) {
-          console.log(cachedResponse);
-          return cachedResponse;
-        } // Else, use the preloaded response, if it's there
-        const response = await event.preloadResponse;
-        if (response) {
-          console.log(response);
-          return response;
-        } // Else try the network.
-        return fetch(event.request);
-      })()
+      caches.match(event.request).then((res) => {
+        if (res) {
+          console.log(res);
+          return res;
+        }
+        //to fetch API
+        let requestUrl = event.request.clone();
+        console.log(requestUrl);
+        fetch(requestUrl);
+      })
     );
-
-    // event.respondWith(
-    //   caches.match(event.request).then((res) => {
-    //     if (res) {
-    //       console.log(res);
-    //       return res;
-    //     }
-    //     //to fetch API
-    //     let requestUrl = event.request.clone();
-    //     console.log(requestUrl);
-    //     fetch(requestUrl);
-    //   })
-    // );
   }
 });
