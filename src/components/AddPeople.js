@@ -32,11 +32,12 @@ const AddPeople = ({ open, handleClose, addItemToDb, db }) => {
     // console.log(firstName, lastName);
     console.log(name, username);
     const newData = { name: name, username: username };
-    addItemToDb();
-    handleClose();
-    setName("");
-    setUserName("");
-    alert("Added Offline");
+    addItemToDb().then(() => {
+      handleClose();
+      alert("Added Offline");
+      setName("");
+      setUserName("");
+    });
     // performAction(
     //   cstConstants.DS_All_PEOPLE_DATA,
     //   newData,
