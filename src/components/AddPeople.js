@@ -33,6 +33,10 @@ const AddPeople = ({ open, handleClose, addItemToDb, db }) => {
     console.log(name, username);
     const newData = { name: name, username: username };
     addItemToDb();
+    handleClose();
+    setName("");
+    setUserName("");
+    alert("Added Offline");
     // performAction(
     //   cstConstants.DS_All_PEOPLE_DATA,
     //   newData,
