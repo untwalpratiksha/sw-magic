@@ -64,6 +64,7 @@ registerRoute(
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
+
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
@@ -72,74 +73,97 @@ self.addEventListener("message", (event) => {
 
 // Any other custom service worker logic can go here.
 
-//setting the file inside cache :install cache
-let cacheData = "appV1";
+let cacheData = "appV00"; // CACHE_NAME
+//set the url which you need to work offline
+
+//NOTE: third party cors not work
 const cacheArray = [
+  "/",
   "/manifest.json",
   "/favicon.ico",
   "/logo192.png",
   "/service-worker.js",
   "/index.html",
-  "/",
+  // "https://jllsa-dev.iwmsapp.com/tririga/p/webapi/rest/v2/peopleReactPU/-1/allPeopleRecordsPU?countOnly=false",
   "https://jsonplaceholder.typicode.com/users",
 ];
+
+//setting the urls inside cache :install cache
 self.addEventListener("install", (event) => {
   console.log("installing cache");
   event.waitUntil(
-    caches.open(cacheData).then((cache) => {
-      cache.addAll(cacheArray);
-    })
-  );
-});
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
     (async () => {
-      // Enable navigation preload if it's supported.
-      // See https://developers.google.com/web/updates/2017/02/navigation-preload
-      if ("navigationPreload" in self.registration) {
-        await self.registration.navigationPreload.enable();
-      }
-      return;
+      const cache = await caches.open(cacheData);
+      // Setting {cache: 'reload'} in the new request will ensure that the response
+      // isn't fulfilled from the HTTP cache; i.e., it will be from the network.
+      await cache.addAll(cacheArray);
     })()
   );
-
-  // Tell the active service worker to take control of the page immediately.
-  self.clients.claim();
+  // event.waitUntil(
+  //   caches.open(cacheData).then((cache) => {
+  //     cache.addAll(cacheArray);
+  //   })
+  // );
 });
 // Fetching data from cache
 self.addEventListener("fetch", (event) => {
   console.log(navigator);
   console.log(event);
   console.log("fetching data from cache");
-  if (!navigator.onLine) {
-    event.respondWith(
-      (async function () {
-        // Respond from the cache if we can
-        const cachedResponse = await caches.match(event.request);
-        if (cachedResponse) {
-          console.log(cachedResponse);
-          return cachedResponse;
-        } // Else, use the preloaded response, if it's there
-        const response = await event.preloadResponse;
-        if (response) {
-          console.log(response);
-          return response;
-        } // Else try the network.
-        return fetch(event.request);
-      })()
-    );
 
-    // event.respondWith(
-    //   caches.match(event.request).then((res) => {
-    //     if (res) {
-    //       console.log(res);
-    //       return res;
-    //     }
-    //     //to fetch API
-    //     let requestUrl = event.request.clone();
-    //     console.log(requestUrl);
-    //     fetch(requestUrl);
-    //   })
-    // );
-  }
+  //Stale-while-revalidate
+  // event.respondWith(
+  //   caches.open(cacheData).then(async (cache) => {
+  //     return cache.match(event.request).then((cachedResponse) => {
+  //       const fetchedResponse = fetch(event.request)
+  //         .then((networkResponse) => {
+  //           cache.put(event.request, networkResponse.clone());
+
+  //           return networkResponse;
+  //         })
+  //         .catch(() => {
+  //           return cachedResponse;
+  //         });
+
+  //       return cachedResponse || fetchedResponse;
+  //     });
+  //   })
+  // );
+  // Use if you want to fetch cache first online later
+  event.respondWith(
+    caches.open(cacheData).then(async (cache) => {
+      // Go to the cache first
+      return cache.match(event.request.url).then((cachedResponse) => {
+        // Return a cached response if we have one
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        // Otherwise, hit the network
+        return fetch(event.request).then((fetchedResponse) => {
+          // Add the network response to the cache for later visits
+          cache.put(event.request, fetchedResponse.clone());
+
+          // Return the network response
+          return fetchedResponse;
+        });
+      });
+    })
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  // event.waitUntil(
+  //   (async () => {
+  //     // Enable navigation preload if it's supported.
+  //     // See https://developers.google.com/web/updates/2017/02/navigation-preload
+  //     if ("navigationPreload" in self.registration) {
+  //       await self.registration.navigationPreload.enable();
+  //     }
+  //     return;
+  //   })()
+  // );
+
+  // Tell the active service worker to take control of the page immediately.
+  self.clients.claim();
 });

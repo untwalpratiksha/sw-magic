@@ -64,6 +64,7 @@ registerRoute(
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
+
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
@@ -72,25 +73,101 @@ self.addEventListener("message", (event) => {
 
 // Any other custom service worker logic can go here.
 
-//setting the file inside cache :install cache
-let cacheData = "appV1";
+let cacheData = "appV1"; // CACHE_NAME
+//set the url which you need to work offline
+
+//NOTE: third party cors not work
 const cacheArray = [
+  "/",
   "/manifest.json",
   "/favicon.ico",
   "/logo192.png",
   "/service-worker.js",
   "/index.html",
-  "/",
+  // "https://jllsa-dev.iwmsapp.com/tririga/p/webapi/rest/v2/peopleReactPU/-1/allPeopleRecordsPU?countOnly=false",
   "https://jsonplaceholder.typicode.com/users",
 ];
+//setting the urls inside cache :install cache
 self.addEventListener("install", (event) => {
   console.log("installing cache");
   event.waitUntil(
-    caches.open(cacheData).then((cache) => {
-      cache.addAll(cacheArray);
-    })
+    (async () => {
+      const cache = await caches.open(cacheData);
+      // Setting {cache: 'reload'} in the new request will ensure that the response
+      // isn't fulfilled from the HTTP cache; i.e., it will be from the network.
+      await cache.addAll(cacheArray);
+    })()
+  );
+  // event.waitUntil(
+  //   caches.open(cacheData).then((cache) => {
+  //      cache.addAll(cacheArray);
+  //   })
+  // );
+});
+// Fetching data from cache
+self.addEventListener("fetch", (event) => {
+  console.log(navigator);
+  console.log(event);
+  console.log("fetching data from cache");
+
+  event.respondWith(
+    (async () => {
+      try {
+        // First, try to use the navigation preload response if it's supported.
+        // const preloadResponse = await event.preloadResponse;
+        // if (preloadResponse) {
+        //   return preloadResponse;
+        // }
+
+        let responseCache;
+        const cachedResponse = caches
+          .match(event.request)
+          .catch(() => fetch(event.request))
+          .then((r) => {
+            responseCache = r;
+            caches.open(cacheData).then((cache) => {
+              cache.put(event.request, responseCache);
+            });
+            return responseCache.clone();
+          })
+          .catch(() => caches.match(event.request));
+
+        // const cachedResponse1 = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        const networkResponse = await fetch(event.request);
+
+        if (cacheArray.some((item) => event.request.url.startsWith(item))) {
+          // This clone() happens before `return networkResponse`
+          const clonedResponse = networkResponse.clone();
+
+          event.waitUntil(
+            (async function () {
+              const cache = await caches.open(cacheData);
+              // This will be called after `return networkResponse`
+              // so make sure you already have the clone!
+              await cache.put(event.request, clonedResponse);
+            })()
+          );
+        }
+        return networkResponse;
+      } catch (error) {
+        // catch is only triggered if an exception is thrown, which is likely
+        // due to a network error.
+        // If fetch() returns a valid HTTP response with a response code in
+        // the 4xx or 5xx range, the catch() will NOT be called.
+        console.log("Fetch failed; returning offline page instead.", error);
+
+        const cache = await caches.open(cacheData);
+        const cachedResponse = await cache.match(event.request);
+        return cachedResponse;
+      }
+    })()
   );
 });
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
@@ -99,29 +176,10 @@ self.addEventListener("activate", (event) => {
       if ("navigationPreload" in self.registration) {
         await self.registration.navigationPreload.enable();
       }
+      return;
     })()
   );
 
   // Tell the active service worker to take control of the page immediately.
   self.clients.claim();
-});
-// Fetching data from cache
-self.addEventListener("fetch", (event) => {
-  console.log(navigator);
-  console.log(event);
-  console.log("fetching data from cache");
-  if (!navigator.onLine) {
-    event.respondWith(
-      caches.match(event.request).then((res) => {
-        if (res) {
-          console.log(res);
-          return res;
-        }
-        //to fetch API
-        let requestUrl = event.request.clone();
-        console.log(requestUrl);
-        fetch(requestUrl);
-      })
-    );
-  }
 });

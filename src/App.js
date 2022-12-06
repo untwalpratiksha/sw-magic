@@ -10,40 +10,48 @@ import { useLiveQuery } from "dexie-react-hooks";
 
 const db = new Dexie("MarketList");
 db.version(1).stores({
-  items: "++id,name,username,email,address,phone,website,company",
+  // offlineItems: "++id,name,username,email,address,phone,website,company",
+  offlineItems:
+    "++id,Id,name,firstname,lastname,email,primaryorganization,status",
 });
-
 function App() {
-  const allItems = useLiveQuery(() => db.items.toArray(), []);
-  if (!allItems) return null;
+  const offlineItems = useLiveQuery(() => db.offlineItems.toArray(), []);
+  if (!offlineItems) return null;
 
-  // const addItemToDb = async (event) => {
-  //   // event.preventDefault();
-  //   const name =
-  //     document.querySelector("#first-name").value +
-  //     " " +
-  //     document.querySelector("#last-name").value;
-  //   const firstName = document.querySelector("#first-name").value;
-  //   const lastName = document.querySelector("#last-name").value;
-  //   console.log(name + " " + lastName);
-  //   await db.items.add({
-  //     name: name,
-  //     firstname: firstName,
-  //     lastname: lastName,
-  //     email: "",
-  //     primaryorganization: "",
-  //     status: "",
-  //   });
-  // };
+  const addItemToDb = async (event) => {
+    // event.preventDefault();
+    const name = document.querySelector("#first-name").value;
+    const username = document.querySelector("#last-name").value;
+    console.log(name + " " + username);
+    await db.offlineItems.add({
+      Id: "",
+      name: "",
+      firstname: name,
+      lastname: username,
+      email: "",
+      primaryorganization: "",
+      status: "",
+    });
+    // await db.offlineItems.add({
+    //   name: name,
+    //   username: username,
+    //   phone: "",
+    //   website: "",
+    //   email: "",
+    //   company: {},
+    //   address: {},
+    // });
+  };
+
   return (
     <>
-      <ResponsiveAppBar />
+      <ResponsiveAppBar db={db} addItemToDb={addItemToDb} />
       <div style={{ margin: "10px" }}>
         <Routes>
           <Route
             exact
             path="/"
-            element={<PeopleTableOne db={db} allItems={allItems} />}
+            element={<PeopleTableOne db={db} offlineItems={offlineItems} />}
           ></Route>
           <Route exact path="/about" element={<About />}></Route>
           {/* <Route path="/detail/:id" element={<PeopleDetails />}></Route> */}

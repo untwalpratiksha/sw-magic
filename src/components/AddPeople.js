@@ -23,14 +23,15 @@ const style = {
   p: 4,
 };
 const AddPeople = ({ open, handleClose, addItemToDb, db }) => {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [name, setName] = useState("");
+  const [username, setUserName] = useState("");
 
   const navigate = useNavigate();
 
   const handleAddPeople = () => {
-    console.log(firstName, lastName);
-    const newData = { firstname: firstName, lastname: lastName };
+    // console.log(firstName, lastName);
+    console.log(name, username);
+    const newData = { name: name, username: username };
     addItemToDb();
     // performAction(
     //   cstConstants.DS_All_PEOPLE_DATA,
@@ -57,17 +58,17 @@ const AddPeople = ({ open, handleClose, addItemToDb, db }) => {
         <TextField
           sx={{ mr: 1 }}
           id="first-name"
-          label="First Name"
+          label="Name"
           variant="standard"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
         <TextField
           id="last-name"
-          label="Last Name"
+          label="User Name"
           variant="standard"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
+          value={username}
+          onChange={(e) => setUserName(e.target.value)}
         />
         <Stack sx={{ mt: 4, direction: "rtl" }} direction="row">
           <Button variant="contained" sx={{ ml: 2 }} onClick={handleAddPeople}>

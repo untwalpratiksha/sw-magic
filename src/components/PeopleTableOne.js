@@ -4,7 +4,7 @@ import axios from "axios";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-const PeopleTableOne = ({ db, allItems }) => {
+const PeopleTableOne = ({ db }) => {
   const [peoples, setPeoples] = useState([]);
   const [mode, setMode] = useState("online");
 
@@ -12,7 +12,6 @@ const PeopleTableOne = ({ db, allItems }) => {
     axios
       .get("https://jsonplaceholder.typicode.com/users")
       .then((response) => {
-        db.items.clear();
         setPeoples(response.data);
         // localStorage.setItem("peoples", JSON.stringify(response.data));
       })
@@ -23,27 +22,30 @@ const PeopleTableOne = ({ db, allItems }) => {
         // setPeoples(JSON.parse(collection));
       });
   };
+  //Fetch Data for first time
   useEffect(() => {
     fetchData();
   }, []);
+
+  //check user is online/offline
   useEffect(() => {
-    storeToIndexedDB(peoples);
-  }, [peoples]);
-  useEffect(() => {
-    window.addEventListener("online", () => {
-      console.log("Became online");
-      fetchData();
-      setMode("online");
-    });
-    window.addEventListener("offline", () => {
-      console.log("Became offline");
-      setMode("offline");
-    });
-    return () => {
-      window.removeEventListener("online");
-      window.removeEventListener("offline");
-    };
-  }, []);
+    // window.addEventListener("online", () => {
+    //   console.log("Became online");
+    //   fetchData();
+    //   setMode("online");
+    // });
+    // window.addEventListener("offline", () => {
+    //   console.log("Became offline");
+    //   setMode("offline");
+    // });
+    // console.log(navigator);
+    // return () => {
+    //   window.removeEventListener("online");
+    //   window.removeEventListener("offline");
+    // };
+  });
+
+  // store fetched data into indexedDB
   const storeToIndexedDB = async (payload) => {
     console.log(payload);
     payload.map(async (item) => {
@@ -58,6 +60,8 @@ const PeopleTableOne = ({ db, allItems }) => {
       });
     });
   };
+
+  //Columns name to show in ag-grid
   const [columnDefs] = useState([
     { field: "id" },
     { field: "name" },
@@ -73,19 +77,11 @@ const PeopleTableOne = ({ db, allItems }) => {
       {mode === "offline" ? <div>You are in offline mode</div> : null}
       <div>People</div>
       <div className="ag-theme-alpine" style={{ height: 400, width: "100%" }}>
-        {mode === "offline" ? (
-          <AgGridReact
-            rowData={allItems}
-            columnDefs={columnDefs}
-            pagination={true}
-          ></AgGridReact>
-        ) : (
-          <AgGridReact
-            rowData={peoples}
-            columnDefs={columnDefs}
-            pagination={true}
-          ></AgGridReact>
-        )}
+        <AgGridReact
+          rowData={peoples}
+          columnDefs={columnDefs}
+          pagination={true}
+        ></AgGridReact>
       </div>
     </>
   );
